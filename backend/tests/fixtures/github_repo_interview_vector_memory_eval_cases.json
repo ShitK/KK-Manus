@@ -1,0 +1,20 @@
+{
+  "dataset_id": "github-repo-interview-vector-memory-eval-v1",
+  "cases": [
+    {"id":"architecture_boundary","query":"core 接口和 infrastructure 实现为什么分离","expected_memory_ids":["miniclawd_architecture_boundary"],"forbidden_memory_ids":["miniclawd_testing_strategy"],"expected_status":"matched"},
+    {"id":"architecture_synonym","query":"这个项目的分层职责与依赖方向如何解释","expected_memory_ids":["miniclawd_architecture_boundary"],"forbidden_memory_ids":[],"expected_status":"matched"},
+    {"id":"agent_loop","query":"消息循环怎样调用模型和工具直到停止","expected_memory_ids":["miniclawd_agent_loop"],"forbidden_memory_ids":[],"expected_status":"matched"},
+    {"id":"startup_debug","query":"createProgram 导入以后启动报错怎么定位","expected_memory_ids":["miniclawd_startup_debug"],"forbidden_memory_ids":[],"expected_status":"matched"},
+    {"id":"testing_strategy","query":"AgentLoop 核心模块优先补哪些测试","expected_memory_ids":["miniclawd_testing_strategy"],"forbidden_memory_ids":[],"expected_status":"matched"},
+    {"id":"llm_timeout","query":"模型请求超时后 Agent 应该如何降级","expected_memory_ids":["miniclawd_llm_timeout"],"forbidden_memory_ids":[],"expected_status":"matched"},
+    {"id":"skills","query":"SkillsLoader 的加载和执行边界是什么","expected_memory_ids":["miniclawd_skills_system"],"forbidden_memory_ids":[],"expected_status":"matched"},
+    {"id":"scheduler","query":"调度器和子代理怎么协作并传递取消","expected_memory_ids":["miniclawd_scheduler_subagent"],"forbidden_memory_ids":[],"expected_status":"matched"},
+    {"id":"dependencies","query":"Bun Commander Zod 和 AI SDK 的工程职责","expected_memory_ids":["miniclawd_dependency_engineering"],"forbidden_memory_ids":[],"expected_status":"matched"},
+    {"id":"keyword_collision","query":"前端视觉回归测试用什么浏览器框架","expected_memory_ids":[],"forbidden_memory_ids":["miniclawd_testing_strategy"],"expected_status":"no_match"},
+    {"id":"empty_memory_set","query":"AgentLoop 如何运行","expected_memory_ids":[],"forbidden_memory_ids":[],"expected_status":"no_match","fixture_mode":"empty"},
+    {"id":"wrong_role","query":"如何设计移动端交互动画","expected_memory_ids":[],"forbidden_memory_ids":["miniclawd_architecture_boundary"],"expected_status":"no_match","target_role":"移动端设计师"},
+    {"id":"short_query","query":"测试","expected_memory_ids":[],"forbidden_memory_ids":["miniclawd_testing_strategy"],"expected_status":"no_match"},
+    {"id":"long_query","query":"请系统解释 AgentLoop 的边界、状态流转、模型调用、工具执行、失败恢复、超时与重试、上下文构建、停止条件、测试分层、日志观测、契约验证和 CI 运行策略，并说明每一层的取舍以及如何避免把基础设施细节泄漏到核心接口。","expected_memory_ids":["miniclawd_agent_loop","miniclawd_testing_strategy"],"forbidden_memory_ids":[],"expected_status":"matched"},
+    {"id":"unicode_markdown","query":"如何验证 **AgentLoop** 工具失败后的恢复路径？ ✅","expected_memory_ids":["miniclawd_testing_strategy"],"forbidden_memory_ids":[],"expected_status":"matched"}
+  ]
+}

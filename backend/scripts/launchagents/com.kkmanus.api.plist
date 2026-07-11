@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+  <key>Label</key>
+  <string>com.kkmanus.api</string>
+  <key>ProgramArguments</key>
+  <array>
+    <string>/opt/homebrew/Caskroom/miniconda/base/envs/kk-manus/bin/python</string>
+    <string>api.py</string>
+  </array>
+  <key>WorkingDirectory</key>
+  <string>/Users/kk/KK-Manus/backend</string>
+  <key>EnvironmentVariables</key>
+  <dict>
+    <key>PYTHONUNBUFFERED</key>
+    <string>1</string>
+  </dict>
+  <key>RunAtLoad</key>
+  <true/>
+  <key>KeepAlive</key>
+  <true/>
+  <key>StandardOutPath</key>
+  <string>/tmp/kkmanus-api.log</string>
+  <key>StandardErrorPath</key>
+  <string>/tmp/kkmanus-api.log</string>
+</dict>
+</plist>

@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+  <key>Label</key>
+  <string>com.kkmanus.dramatiq</string>
+  <key>ProgramArguments</key>
+  <array>
+    <string>/opt/homebrew/Caskroom/miniconda/base/envs/kk-manus/bin/python</string>
+    <string>-m</string>
+    <string>dramatiq</string>
+    <string>--skip-logging</string>
+    <string>--processes</string>
+    <string>1</string>
+    <string>--threads</string>
+    <string>4</string>
+    <string>run_agent_background</string>
+  </array>
+  <key>WorkingDirectory</key>
+  <string>/Users/kk/KK-Manus/backend</string>
+  <key>EnvironmentVariables</key>
+  <dict>
+    <key>PYTHONUNBUFFERED</key>
+    <string>1</string>
+  </dict>
+  <key>RunAtLoad</key>
+  <true/>
+  <key>KeepAlive</key>
+  <true/>
+  <key>StandardOutPath</key>
+  <string>/tmp/kkmanus-dramatiq.log</string>
+  <key>StandardErrorPath</key>
+  <string>/tmp/kkmanus-dramatiq.log</string>
+</dict>
+</plist>

@@ -1,0 +1,85 @@
+{
+  "fixture_id": "miniclawd-vector-memory-demo-v1",
+  "repository": "ShitK/miniclawd",
+  "commit": "2d65665",
+  "memories": [
+    {
+      "id": "miniclawd_architecture_boundary",
+      "target_role": "后端开发工程师",
+      "category": "architecture",
+      "text": "此前练习表明，解释 miniclawd 架构时应从 src/index.ts 到 cli/commands.ts 的入口调用链展开，再区分 core 接口、application 编排、infrastructure 实现和 tools 执行边界，并说明依赖倒置带来的可替换性与测试收益。"
+    },
+    {
+      "id": "miniclawd_agent_loop",
+      "target_role": "后端开发工程师",
+      "category": "implementation detail",
+      "text": "此前练习 AgentLoop 时，重点是说明消息驱动循环如何读取 MessageBus、通过 ContextBuilder 组装上下文、调用统一 LLM provider、执行工具并继续迭代，同时强调 maxIterations、异常传播和最终停止条件。"
+    },
+    {
+      "id": "miniclawd_startup_debug",
+      "target_role": "后端开发工程师",
+      "category": "testing and automation",
+      "text": "排查 miniclawd 启动阶段问题时，可沿 src/index.ts 导入 createProgram、cli/commands.ts 注册命令、配置解析和 application 构造链建立最小闭环，通过 smoke test、分层日志和依赖替身区分入口错误、CLI 配置错误与应用层初始化错误。"
+    },
+    {
+      "id": "miniclawd_testing_strategy",
+      "target_role": "后端开发工程师",
+      "category": "testing and automation",
+      "text": "测试策略应优先覆盖 AgentLoop 状态流转、工具调用成功与失败、LLM 超时、maxIterations 终止和 MessageBus 边界，再补入口 smoke test、provider 契约测试与少量真实集成测试，并区分 PR 必跑和 nightly 回归。"
+    },
+    {
+      "id": "miniclawd_llm_timeout",
+      "target_role": "后端开发工程师",
+      "category": "implementation detail",
+      "text": "处理 LLM 超时时，应在 provider 调用层设置单次超时，在 AgentLoop 层设置步骤总超时，并把 timeout 转换为结构化失败事件；保留已完成工具结果，限制重试次数，返回可解释降级信息，避免循环无限等待。"
+    },
+    {
+      "id": "miniclawd_skills_system",
+      "target_role": "后端开发工程师",
+      "category": "implementation detail",
+      "text": "讲解 Skills System 时，应区分 SkillsLoader 的发现与加载职责、技能描述进入上下文的方式，以及工具执行与技能文本之间的边界；同时讨论加载失败隔离、名称冲突、权限约束和可测试的注册表契约。"
+    },
+    {
+      "id": "miniclawd_scheduler_subagent",
+      "target_role": "后端开发工程师",
+      "category": "architecture",
+      "text": "解释 Scheduler 和 Subagent 时，应说明调度器负责计划与生命周期，子代理负责受限任务执行，二者通过明确消息和结果契约协作；需要补充并发上限、取消传播、超时、失败汇总和父代理上下文隔离。"
+    },
+    {
+      "id": "miniclawd_dependency_engineering",
+      "target_role": "后端开发工程师",
+      "category": "dependency and packaging",
+      "text": "工程化分析应结合 package.json 中 Bun、AI SDK、Commander 和 Zod 的职责，说明运行时、模型适配、CLI 与输入校验如何组合，并指出当前缺少完整 test script 时应补 typecheck、单测、smoke test 和 CI 分层。"
+    }
+  ],
+  "showcase_queries": [
+    {
+      "id": "architecture_q1",
+      "query": "请解释 miniclawd 从 src/index.ts 开始的 core、application、infrastructure 和 tools 架构边界",
+      "target_role": "后端开发工程师",
+      "category": "architecture",
+      "expected_memory_ids": ["miniclawd_architecture_boundary"]
+    },
+    {
+      "id": "agent_loop_q2",
+      "query": "AgentLoop 的消息驱动循环如何工作，工具调用和停止条件是什么",
+      "target_role": "后端开发工程师",
+      "category": "implementation detail",
+      "expected_memory_ids": ["miniclawd_agent_loop"]
+    },
+    {
+      "id": "startup_follow_up",
+      "query": "如何沿 createProgram import 调用链排查启动阶段错误",
+      "target_role": "后端开发工程师",
+      "category": "testing and automation",
+      "expected_memory_ids": ["miniclawd_startup_debug"]
+    },
+    {
+      "id": "agent_loop_test_follow_up",
+      "query": "只看到 Application 导出模块名时，怎样设计测试验证 AgentLoop 边界行为",
+      "target_role": "后端开发工程师",
+      "category": "testing and automation",
+      "expected_memory_ids": ["miniclawd_testing_strategy"]
+    }
+  ]
+}
