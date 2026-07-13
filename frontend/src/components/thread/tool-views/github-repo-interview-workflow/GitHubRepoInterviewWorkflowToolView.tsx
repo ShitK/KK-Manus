@@ -68,7 +68,8 @@ import {
   formatWorkflowFactValue,
   formatWorkflowStepStatusLabel,
   groupWorkflowRoles,
-  type GitHubRepoInterviewSessionMemory,
+  hasCompletedConversationSummary,
+  mergeGitHubInterviewSessionMemory,
   type GitHubRepoInterviewAgentNode,
   type GitHubRepoInterviewMultiAgentTrace,
   type GitHubRepoInterviewMultiAgentTraceFlowNode,
@@ -1401,14 +1402,11 @@ function SessionMemorySection({
 }: {
   payload: GitHubRepoInterviewWorkflowPayload;
 }) {
-  const hasSessionMemory = Boolean(
-    payload.data?.session_memory_context || payload.data?.session_memory_patch,
+  const sessionMemory = mergeGitHubInterviewSessionMemory(
+    payload.data?.session_memory_context,
+    payload.data?.session_memory_patch,
   );
-  const sessionMemory: GitHubRepoInterviewSessionMemory =
-    payload.data?.session_memory_context ||
-    payload.data?.session_memory_patch ||
-    {};
-  if (!hasSessionMemory) return null;
+  if (!sessionMemory) return null;
 
   return (
     <Section title="本会话记忆" icon={<Database className="text-cyan-500" />}>
@@ -1573,9 +1571,6 @@ function VectorMemoryRetrievalSection({
           >
             <div className="flex flex-wrap items-center gap-2">
               <Badge variant="outline">相关度 {Math.round((memory.similarity || 0) * 100)}%</Badge>
-              {memory.provenance?.kind === 'demo_fixture' ? (
-                <Badge variant="outline" className="text-amber-600">演示记忆</Badge>
-              ) : null}
             </div>
             <div className="mt-2"><TextBlock>{memory.text}</TextBlock></div>
           </div>
@@ -1968,12 +1963,31 @@ export const GitHubRepoInterviewWorkflowToolView: React.FC<ToolViewProps> = ({
   toolTimestamp,
   isSuccess = true,
   isStreaming = false,
+  messages,
   ...props
 }) => {
-  const payload = extractGitHubRepoInterviewWorkflowData(
+  const extractedPayload = extractGitHubRepoInterviewWorkflowData(
     toolContent,
     assistantContent,
   );
+  const summaryCompleted = hasCompletedConversationSummary(messages);
+  const payload =
+    extractedPayload?.data?.workflow?.steps && summaryCompleted
+      ? {
+          ...extractedPayload,
+          data: {
+            ...extractedPayload.data,
+            workflow: {
+              ...extractedPayload.data.workflow,
+              steps: extractedPayload.data.workflow.steps.map((step) =>
+                step.id === 'summary'
+                  ? { ...step, status: 'success' as const, detail: undefined }
+                  : step,
+              ),
+            },
+          },
+        }
+      : extractedPayload;
 
   if (!payload || !hasMeaningfulPayload(payload)) {
     return (

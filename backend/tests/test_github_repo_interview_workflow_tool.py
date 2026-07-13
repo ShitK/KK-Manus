@@ -86,6 +86,16 @@ def full_slice_4_payload():
     }
 
 
+def questions_pack_with_target_role(target_role: str):
+    return {
+        "tool": "github_repo_interview_prep",
+        "input": {"target_role": target_role},
+        "data": {
+            **sample_questions_pack(),
+        },
+    }
+
+
 class GitHubRepoInterviewWorkflowStateTest(unittest.TestCase):
     def test_build_workflow_state_selects_question_by_exact_id(self):
         state = build_workflow_state(
@@ -505,6 +515,80 @@ class RaisingWorkflowStageEngine:
 
 
 class GitHubRepoInterviewWorkflowToolTest(unittest.IsolatedAsyncioTestCase):
+    async def test_prep_target_role_is_used_for_first_memory_retrieval_and_session_patch(self):
+        loader = AsyncMock(
+            return_value={
+                "session_memory_context": {},
+                "saved_memory_context": [],
+                "vector_memory_context": [],
+                "vector_memory_retrieval": {"status": "no_match"},
+            }
+        )
+        tool = GitHubRepoInterviewWorkflowTool(memory_context_loader=loader)
+
+        result = await tool.github_repo_interview_workflow(
+            stage="select_question",
+            prep_questions_pack=questions_pack_with_target_role("AI Agent开发工程师"),
+            question_id="Q1",
+        )
+
+        payload = json.loads(result.output)
+        loader.assert_awaited_once_with(
+            query_text="你会如何解释这个仓库的架构边界？",
+            target_role="AI Agent开发工程师",
+            category="architecture",
+        )
+        self.assertEqual(payload["input"]["target_role"], "AI Agent开发工程师")
+        self.assertEqual(
+            payload["data"]["session_memory_patch"]["target_role"],
+            "AI Agent开发工程师",
+        )
+
+    async def test_existing_session_target_role_takes_precedence_over_prep_role(self):
+        loader = AsyncMock(
+            return_value={
+                "session_memory_context": {"target_role": "资深后端开发工程师"},
+                "saved_memory_context": [],
+                "vector_memory_context": [],
+                "vector_memory_retrieval": {"status": "no_match"},
+            }
+        )
+        tool = GitHubRepoInterviewWorkflowTool(memory_context_loader=loader)
+
+        result = await tool.github_repo_interview_workflow(
+            stage="select_question",
+            prep_questions_pack=questions_pack_with_target_role("AI Agent开发工程师"),
+            question_id="Q1",
+            session_memory_context={"target_role": "资深后端开发工程师"},
+        )
+
+        payload = json.loads(result.output)
+        loader.assert_awaited_once_with(
+            query_text="你会如何解释这个仓库的架构边界？",
+            target_role="资深后端开发工程师",
+            category="architecture",
+        )
+        self.assertEqual(payload["input"]["target_role"], "资深后端开发工程师")
+        self.assertEqual(
+            payload["data"]["session_memory_patch"]["target_role"],
+            "资深后端开发工程师",
+        )
+
+    async def test_unsafe_or_oversized_prep_target_role_is_not_propagated(self):
+        for target_role in ("", "https://example.com/role", "A" * 81):
+            with self.subTest(target_role=target_role):
+                tool = GitHubRepoInterviewWorkflowTool()
+
+                result = await tool.github_repo_interview_workflow(
+                    stage="select_question",
+                    prep_questions_pack=questions_pack_with_target_role(target_role),
+                    question_id="Q1",
+                )
+
+                payload = json.loads(result.output)
+                self.assertNotIn("target_role", payload["input"])
+                self.assertNotIn("target_role", payload["data"]["session_memory_patch"])
+
     async def test_model_tool_call_automatically_loads_vector_memory_context(self):
         loader = AsyncMock(
             return_value={

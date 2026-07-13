@@ -28,6 +28,7 @@ from agent.tools.github_repo_interview_workflow_context import attach_context_po
 from agent.tools.github_repo_interview_memory import select_workflow_memory_context
 from agent.tools.github_repo_interview_multi_agent_trace import build_multi_agent_trace
 from agent.tools.github_repo_interview_session_memory import (
+    MAX_TARGET_ROLE_LEN,
     build_session_memory_patch,
     sanitize_session_memory_state,
 )
@@ -210,6 +211,23 @@ def _questions_from_pack(prep_questions_pack: Any) -> List[Dict[str, Any]]:
         source = prep_questions_pack if isinstance(prep_questions_pack, dict) else {}
     questions = source.get("interview_questions")
     return questions if isinstance(questions, list) else []
+
+
+def _target_role_from_prep_pack(prep_questions_pack: Any) -> str:
+    if not isinstance(prep_questions_pack, dict):
+        return ""
+    input_data = prep_questions_pack.get("input")
+    if not isinstance(input_data, dict):
+        data = prep_questions_pack.get("data")
+        input_data = data.get("input") if isinstance(data, dict) else None
+    if not isinstance(input_data, dict):
+        return ""
+    raw_target_role = str(input_data.get("target_role") or "").strip()
+    if not raw_target_role or len(raw_target_role) > MAX_TARGET_ROLE_LEN:
+        return ""
+    return str(
+        sanitize_session_memory_state({"target_role": raw_target_role}).get("target_role") or ""
+    ).strip()
 
 
 def _first_unanswered_question_id(prep_questions_pack: Any, session_memory_context: Dict[str, Any]) -> str:
@@ -711,7 +729,12 @@ class GitHubRepoInterviewWorkflowTool(Tool):
             ),
             {},
         )
-        existing_session = session_memory_context if isinstance(session_memory_context, dict) else {}
+        existing_session = sanitize_session_memory_state(
+            session_memory_context if isinstance(session_memory_context, dict) else {}
+        )
+        target_role = str(
+            existing_session.get("target_role") or _target_role_from_prep_pack(prep_questions_pack)
+        ).strip()
         category = str(
             preferred_question_category
             or existing_session.get("current_practice_category")
@@ -727,7 +750,7 @@ class GitHubRepoInterviewWorkflowTool(Tool):
         try:
             loaded = await self._memory_context_loader(
                 query_text=query_text,
-                target_role=str(existing_session.get("target_role") or "").strip() or None,
+                target_role=target_role or None,
                 category=category or None,
             )
         except Exception:
@@ -943,6 +966,8 @@ Required call shape:
         """
         del selected_follow_up_id
         previous_workflow_state = _unwrap_previous_workflow_state(previous_workflow_state)
+        initial_session_memory = sanitize_session_memory_state(session_memory_context or {})
+        prep_target_role = _target_role_from_prep_pack(prep_questions_pack)
         (
             saved_memory_context,
             session_memory_context,
@@ -960,6 +985,12 @@ Required call shape:
             vector_memory_retrieval=vector_memory_retrieval,
         )
         session_memory_context = sanitize_session_memory_state(session_memory_context or {})
+        target_role = str(
+            session_memory_context.get("target_role")
+            or initial_session_memory.get("target_role")
+            or prep_target_role
+            or ""
+        ).strip()
 
         normalized_max_follow_ups = _normalize_max_follow_ups(max_follow_ups)
         raw_language = language
@@ -992,6 +1023,8 @@ Required call shape:
             "preferred_question_category": preferred_question_category,
             "max_follow_ups": normalized_max_follow_ups,
         }
+        if target_role:
+            input_data["target_role"] = target_role
 
         state = build_workflow_state(
             stage=stage,

@@ -160,6 +160,38 @@ export type GitHubRepoInterviewSessionMemory = {
   summary_completed?: boolean;
 };
 
+export function mergeGitHubInterviewSessionMemory(
+  context?: GitHubRepoInterviewSessionMemory,
+  patch?: GitHubRepoInterviewSessionMemory,
+): GitHubRepoInterviewSessionMemory | undefined {
+  if (!context && !patch) return undefined;
+
+  const mergeUnique = (left?: string[], right?: string[]) =>
+    Array.from(new Set([...(left || []), ...(right || [])]));
+  const merged: GitHubRepoInterviewSessionMemory = {
+    ...(context || {}),
+    ...(patch || {}),
+  };
+
+  const answeredQuestionIds = mergeUnique(
+    context?.answered_question_ids,
+    patch?.answered_question_ids,
+  );
+  if (answeredQuestionIds.length) {
+    merged.answered_question_ids = answeredQuestionIds;
+  }
+
+  const missedEvidenceIds = mergeUnique(
+    context?.missed_evidence_ids,
+    patch?.missed_evidence_ids,
+  );
+  if (missedEvidenceIds.length) {
+    merged.missed_evidence_ids = missedEvidenceIds;
+  }
+
+  return merged;
+}
+
 export type GitHubRepoInterviewVectorMemoryCandidate = {
   id?: string;
   type?: 'practice_experience_summary';
@@ -922,6 +954,52 @@ export function formatWorkflowStepStatusLabel(
   }
 
   return formatWorkflowDisplayTerm(status) || status;
+}
+
+function parseJsonObject(value: unknown): Record<string, unknown> | undefined {
+  if (typeof value === 'string') {
+    if (!value.trim() || value === 'STREAMING') return undefined;
+    try {
+      const parsed = JSON.parse(value);
+      return isObject(parsed) ? parsed : undefined;
+    } catch {
+      return undefined;
+    }
+  }
+  return isObject(value) ? value : undefined;
+}
+
+function hasExplicitSummarySuccess(value: unknown, depth = 0): boolean {
+  if (depth > 4) return false;
+  const parsed = parseJsonObject(value);
+  if (!parsed) return false;
+
+  const status = normalizeString(parsed.status);
+  if (status === 'success') return true;
+  if (parsed.success === true) return true;
+  if (status === 'error' || parsed.success === false) return false;
+
+  return [parsed.result, parsed.output, parsed.tool_execution].some((candidate) =>
+    hasExplicitSummarySuccess(candidate, depth + 1),
+  );
+}
+
+export function hasCompletedConversationSummary(messages: unknown): boolean {
+  if (!Array.isArray(messages)) return false;
+
+  return messages.some((message) => {
+    if (!isObject(message) || message.type !== 'tool') return false;
+    const metadata = parseJsonObject(message.metadata);
+    const content = parseJsonObject(message.content);
+    const toolName = normalizeString(
+      metadata?.tool_name ||
+        metadata?.function_name ||
+        content?.tool_name ||
+        parseJsonObject(content?.tool_execution)?.function_name,
+    )?.replace(/-/g, '_');
+    if (toolName !== 'github_repo_interview_conversation_summary') return false;
+    return hasExplicitSummarySuccess(content);
+  });
 }
 
 export function buildWorkflowBoundaryFacts(

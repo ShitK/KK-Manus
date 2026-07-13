@@ -13,6 +13,8 @@ import {
   formatWorkflowFactValue,
   formatWorkflowStepStatusLabel,
   groupWorkflowRoles,
+  hasCompletedConversationSummary,
+  mergeGitHubInterviewSessionMemory,
   type GitHubRepoInterviewWorkflowPayload,
   type GitHubRepoInterviewWorkflowRole,
 } from './_utils';
@@ -977,4 +979,109 @@ test('vector memory payload is normalized without embeddings or unsafe text', ()
     'vector_memory_candidate',
     'vector_memory_retrieval',
   ]);
+});
+
+test('detects a completed conversation summary from thread tool messages', () => {
+  const messages = [
+    {
+      type: 'tool',
+      metadata: JSON.stringify({
+        tool_name: 'github_repo_interview_conversation_summary',
+      }),
+      content: JSON.stringify({
+        tool_name: 'github_repo_interview_conversation_summary',
+        result: JSON.stringify({ status: 'success' }),
+      }),
+    },
+  ];
+
+  assert.equal(hasCompletedConversationSummary(messages), true);
+  assert.equal(
+    hasCompletedConversationSummary([
+      {
+        type: 'tool',
+        metadata: JSON.stringify({
+          tool_name: 'github_repo_interview_conversation_summary',
+        }),
+        content: 'STREAMING',
+      },
+    ]),
+    false,
+  );
+  assert.equal(
+    hasCompletedConversationSummary([
+      {
+        type: 'tool',
+        metadata: JSON.stringify({
+          tool_name: 'github_repo_interview_conversation_summary',
+        }),
+        content: JSON.stringify({
+          tool_execution: {
+            result: {
+              success: true,
+              output: JSON.stringify({ status: 'success' }),
+            },
+          },
+        }),
+      },
+    ]),
+    true,
+  );
+});
+
+test('does not complete summary for failed or assistant-only events', () => {
+  assert.equal(
+    hasCompletedConversationSummary([
+      {
+        type: 'tool',
+        metadata: JSON.stringify({
+          tool_name: 'github_repo_interview_conversation_summary',
+        }),
+        content: JSON.stringify({ result: JSON.stringify({ status: 'error' }) }),
+      },
+      {
+        type: 'assistant',
+        metadata: JSON.stringify({
+          tool_name: 'github_repo_interview_conversation_summary',
+        }),
+        content: JSON.stringify({ success: true }),
+      },
+    ]),
+    false,
+  );
+});
+
+test('merges session memory context with the latest patch', () => {
+  assert.deepEqual(
+    mergeGitHubInterviewSessionMemory(
+      {
+        target_role: '后端开发工程师',
+        answered_question_ids: ['Q1'],
+        missed_evidence_ids: ['src:index'],
+        current_practice_category: 'architecture',
+      },
+      {
+        target_role: 'AI Agent开发工程师',
+        answered_question_ids: ['Q1', 'Q2'],
+        missed_evidence_ids: ['src:application'],
+        next_practice_suggestion: '继续练习 AgentLoop。',
+      },
+    ),
+    {
+      target_role: 'AI Agent开发工程师',
+      answered_question_ids: ['Q1', 'Q2'],
+      missed_evidence_ids: ['src:index', 'src:application'],
+      current_practice_category: 'architecture',
+      next_practice_suggestion: '继续练习 AgentLoop。',
+    },
+  );
+});
+
+test('returns the available session memory source without inventing fields', () => {
+  const context = { target_role: 'AI Agent开发工程师' };
+  const patch = { answered_question_ids: ['Q1'] };
+
+  assert.deepEqual(mergeGitHubInterviewSessionMemory(context, undefined), context);
+  assert.deepEqual(mergeGitHubInterviewSessionMemory(undefined, patch), patch);
+  assert.equal(mergeGitHubInterviewSessionMemory(undefined, undefined), undefined);
 });

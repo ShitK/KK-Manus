@@ -19,6 +19,7 @@ import {
   DrawerHeader,
   DrawerTitle,
 } from '@/components/ui/drawer';
+import { projectGitHubInterviewToolCalls } from './github-interview-tool-call-projection';
 
 export interface ToolCallInput {
   assistantCall: {
@@ -222,6 +223,10 @@ export function ToolCallSidePanel({
   onFileClick,
   disableInitialAnimation,
 }: ToolCallSidePanelProps) {
+  const visibleToolCalls = React.useMemo(
+    () => projectGitHubInterviewToolCalls(toolCalls),
+    [toolCalls],
+  );
   // 渲染计数调试
   const renderCount = React.useRef(0);
   renderCount.current += 1;
@@ -253,7 +258,7 @@ export function ToolCallSidePanel({
   // 大幅简化逻辑，只在必要时更新
   React.useEffect(() => {
     // 只在 toolCalls 长度变化时重新生成快照
-    const newSnapshots = toolCalls.map((toolCall, index) => ({
+    const newSnapshots = visibleToolCalls.map((toolCall, index) => ({
       id: `${index}-${toolCall.assistantCall.timestamp || 'no-timestamp'}`,
       toolCall,
       index,
@@ -267,7 +272,7 @@ export function ToolCallSidePanel({
       setInternalIndex(newSnapshots.length - 1);
       setIsInitialized(true);
     }
-  }, [toolCalls.length]); // 只依赖长度
+  }, [visibleToolCalls]);
 
   // 简化的索引同步，完全避免 toolCallSnapshots 依赖
   React.useEffect(() => {
