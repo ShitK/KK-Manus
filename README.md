@@ -4,6 +4,12 @@ KKManus 是一个面向 AI Agent 应用开发场景的本地可部署智能体�
 
 当前项目以 GitHub 项目面试训练作为核心落地场景：系统可以基于公开仓库内容构建项目证据包，生成贴合真实代码实现的面试题、答题方向、追问和复盘总结，并通过记忆系统支持多轮练习连续推进。
 
+## 项目演示
+
+[查看 KKManus 项目演示 Release](https://github.com/ShitK/KK-Manus/releases/tag/demo-v1)
+
+[直接下载完整演示视频（MP4，147 MB）](https://github.com/ShitK/KK-Manus/releases/download/demo-v1/KKManus.mp4)
+
 ![KKManus 记忆增强型智能体系统架构图](docs/assets/kkmanus-architecture.png)
 
 ## 项目简介
