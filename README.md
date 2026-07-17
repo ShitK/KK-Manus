@@ -6,9 +6,9 @@ KKManus 是一个面向 AI Agent 应用开发场景的本地可部署智能体�
 
 ## 项目演示
 
-[查看 KKManus 项目演示 Release](https://github.com/ShitK/KK-Manus/releases/tag/demo-v1)
+- 🎬 [查看 KKManus 项目演示 Release](https://github.com/ShitK/KK-Manus/releases/tag/demo-v1)
 
-[直接下载完整演示视频（MP4，147 MB）](https://github.com/ShitK/KK-Manus/releases/download/demo-v1/KKManus.mp4)
+- ⬇️ [直接下载完整演示视频（MP4，147 MB）](https://github.com/ShitK/KK-Manus/releases/download/demo-v1/KKManus.mp4)
 
 ![KKManus 记忆增强型智能体系统架构图](docs/assets/kkmanus-architecture.png)
 
